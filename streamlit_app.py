@@ -110,9 +110,23 @@ def get_collection_info(collection_name):
         }
 
 
+def clear_log_file():
+    """Clear the log file."""
+    try:
+        from config import STAGE1_LOG_FILE
+        if os.path.exists(STAGE1_LOG_FILE):
+            with open(STAGE1_LOG_FILE, 'w') as f:
+                f.write("")  # Clear the file
+    except Exception as e:
+        st.error(f"Error clearing log file: {e}")
+
+
 def run_stage1_parser(selected_collections):
     """Run the Stage1 parser for selected collections."""
     try:
+        # Clear the log file before starting
+        clear_log_file()
+        
         # Create a temporary script to run the parser
         collections_str = ",".join(selected_collections)
         
@@ -135,6 +149,28 @@ def run_stage1_parser(selected_collections):
 
 def main():
     """Main function for the home page."""
+            # Check if we should navigate to logs page
+    if 'should_navigate_to_logs' in st.session_state and st.session_state.should_navigate_to_logs:
+        st.session_state.should_navigate_to_logs = False
+        st.markdown("### 🔄 Processing Started Successfully!")
+        st.success("✅ Your collections are now being processed in the background.")
+        
+        st.markdown("### 📋 Next Steps:")
+        st.markdown("1. **Navigate to Processing Logs** - Use the sidebar to go to the Processing Logs page")
+        st.markdown("2. **Monitor Progress** - Watch real-time updates as your collections are processed")
+        st.markdown("3. **Explore Results** - Once complete, visit the Parquet Explorer to view your data")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("**📋 Processing Logs Page**")
+            st.markdown("Monitor real-time processing progress")
+        with col2:
+            st.markdown("**📊 Parquet Explorer Page**")
+            st.markdown("View and analyze processed data")
+        
+        st.info("💡 **Tip:** Use the sidebar menu to navigate between pages")
+        st.stop()
+    
     st.markdown('<h1 class="main-header">🗄️ Kimball Stage1 Pipeline</h1>', unsafe_allow_html=True)
     
     # Workflow overview
@@ -149,116 +185,158 @@ def main():
     </div>
     """, unsafe_allow_html=True)
     
-    # Get collections
-    collections = get_mongodb_collections()
+    # Clear log file on app refresh
+    if 'app_initialized' not in st.session_state:
+        clear_log_file()
+        st.session_state.app_initialized = True
     
-    if not collections:
-        st.error("No collections found or unable to connect to MongoDB.")
-        return
-    
-    st.info(f"📊 Found {len(collections)} collections in MongoDB")
-    
-    # Search and filter
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        search_term = st.text_input("🔍 Search collections:", "")
-    
-    with col2:
-        filter_option = st.selectbox(
-            "📋 Filter by:",
-            ["All", "Has Nested Data", "Simple Collections", "Large Collections (>10k docs)", "Small Collections (<1k docs)"]
-        )
-    
-    # Filter collections based on search and filter
-    filtered_collections = collections
-    
-    if search_term:
-        filtered_collections = [c for c in filtered_collections if search_term.lower() in c.lower()]
-    
-    # Get collection info for filtered collections
-    with st.spinner("Analyzing collections..."):
-        collection_info = []
-        for collection in filtered_collections:
-            info = get_collection_info(collection)
-            collection_info.append(info)
-    
-    # Apply additional filters
-    if filter_option == "Has Nested Data":
-        collection_info = [c for c in collection_info if c.get('has_nested_data', False)]
-    elif filter_option == "Simple Collections":
-        collection_info = [c for c in collection_info if not c.get('has_nested_data', False)]
-    elif filter_option == "Large Collections (>10k docs)":
-        collection_info = [c for c in collection_info if c.get('document_count', 0) > 10000]
-    elif filter_option == "Small Collections (<1k docs)":
-        collection_info = [c for c in collection_info if c.get('document_count', 0) < 1000]
-    
-    st.write(f"📋 Showing {len(collection_info)} collections")
-    
-    # Selection controls
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        if st.button("✅ Select All"):
-            st.session_state.selected_collections = [c['name'] for c in collection_info]
-            st.experimental_rerun()
-    
-    with col2:
-        if st.button("❌ Clear All"):
-            st.session_state.selected_collections = []
-            st.experimental_rerun()
-    
-    with col3:
-        if st.button("🔄 Refresh"):
-            st.experimental_rerun()
-    
-    # Initialize selected collections in session state
+    # Initialize session state
+    if 'collections_loaded' not in st.session_state:
+        st.session_state.collections_loaded = False
+    if 'collections' not in st.session_state:
+        st.session_state.collections = []
+    if 'collection_info' not in st.session_state:
+        st.session_state.collection_info = []
     if 'selected_collections' not in st.session_state:
         st.session_state.selected_collections = []
     
-    # Display collections
-    st.markdown("### 📁 Available Collections")
-    
-    for info in collection_info:
-        collection_name = info['name']
+    # Collection discovery section
+    if not st.session_state.collections_loaded:
+        st.markdown("### 🔍 Discover MongoDB Collections")
+        st.info("Click the button below to discover and analyze collections in your MongoDB database.")
         
-        # Create a card for each collection
-        with st.container():
-            col1, col2, col3, col4, col5 = st.columns([1, 2, 1, 1, 1])
-            
-            with col1:
-                is_selected = collection_name in st.session_state.selected_collections
-                if st.checkbox("", value=is_selected, key=f"check_{collection_name}"):
-                    if collection_name not in st.session_state.selected_collections:
-                        st.session_state.selected_collections.append(collection_name)
-                else:
-                    if collection_name in st.session_state.selected_collections:
-                        st.session_state.selected_collections.remove(collection_name)
-            
-            with col2:
-                st.markdown(f"**{collection_name}**")
-                if info.get('error'):
-                    st.error(f"Error: {info['error']}")
-                else:
-                    st.caption(f"{info['field_count']} fields")
-            
-            with col3:
-                st.write(f"{info['document_count']:,} docs")
-            
-            with col4:
-                if info.get('has_nested_data'):
-                    st.markdown("🔗 **Nested**")
-                else:
-                    st.markdown("📄 **Simple**")
-            
-            with col5:
-                if st.button("ℹ️", key=f"info_{collection_name}"):
-                    st.session_state.show_info = collection_name
+        if st.button("🔍 Discover Collections", type="primary"):
+            with st.spinner("Connecting to MongoDB and analyzing collections..."):
+                collections = get_mongodb_collections()
+                
+                if not collections:
+                    st.error("No collections found or unable to connect to MongoDB.")
+                    return
+                
+                st.session_state.collections = collections
+                
+                # Get collection info
+                collection_info = []
+                for collection in collections:
+                    info = get_collection_info(collection)
+                    collection_info.append(info)
+                
+                st.session_state.collection_info = collection_info
+                st.session_state.collections_loaded = True
+                st.success(f"✅ Discovered {len(collections)} collections!")
+                st.experimental_rerun()
+    else:
+        # Collections are loaded, show the interface
+        st.success(f"📊 {len(st.session_state.collections)} collections loaded")
+        
+        # Add a button to refresh collections
+        if st.button("🔄 Refresh Collections"):
+            st.session_state.collections_loaded = False
+            st.session_state.collections = []
+            st.session_state.collection_info = []
+            st.session_state.selected_collections = []
+            st.experimental_rerun()
     
-    # Show collection details if requested
-    if 'show_info' in st.session_state and st.session_state.show_info:
-        collection_name = st.session_state.show_info
-        info = next((c for c in collection_info if c['name'] == collection_name), None)
+        # Search and filter
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            search_term = st.text_input("🔍 Search collections:", "")
+        
+        with col2:
+            filter_option = st.selectbox(
+                "📋 Filter by:",
+                ["All", "Has Nested Data", "Simple Collections", "Large Collections (>10k docs)", "Small Collections (<1k docs)"]
+            )
+        
+        # Filter collections based on search and filter
+        filtered_collection_info = st.session_state.collection_info.copy()
+        
+        if search_term:
+            filtered_collection_info = [c for c in filtered_collection_info if search_term.lower() in c['name'].lower()]
+        
+        # Apply additional filters
+        if filter_option == "Has Nested Data":
+            filtered_collection_info = [c for c in filtered_collection_info if c.get('has_nested_data', False)]
+        elif filter_option == "Simple Collections":
+            filtered_collection_info = [c for c in filtered_collection_info if not c.get('has_nested_data', False)]
+        elif filter_option == "Large Collections (>10k docs)":
+            filtered_collection_info = [c for c in filtered_collection_info if c.get('document_count', 0) > 10000]
+        elif filter_option == "Small Collections (<1k docs)":
+            filtered_collection_info = [c for c in filtered_collection_info if c.get('document_count', 0) < 1000]
+        
+        st.write(f"📋 Showing {len(filtered_collection_info)} collections")
+    
+        # Selection controls
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            if st.button("✅ Select All"):
+                st.session_state.selected_collections = [c['name'] for c in filtered_collection_info]
+                st.experimental_rerun()
+        
+        with col2:
+            if st.button("❌ Clear All"):
+                st.session_state.selected_collections = []
+                st.experimental_rerun()
+        
+        with col3:
+            if st.button("🔄 Process", type="primary"):
+                if st.session_state.selected_collections:
+                    with st.spinner("Processing collections..."):
+                        success = run_stage1_parser(st.session_state.selected_collections)
+                        if success:
+                            st.session_state.processing_complete = True
+                            st.session_state.should_navigate_to_logs = True
+                            st.success("✅ Collections processed successfully!")
+                            st.info("🔄 Automatically navigating to Processing Logs page...")
+                            st.experimental_rerun()
+                else:
+                    st.warning("Please select at least one collection to process.")
+        
+        # Display collections
+        st.markdown("### 📁 Available Collections")
+        
+        for info in filtered_collection_info:
+            collection_name = info['name']
+            
+            # Create a card for each collection
+            with st.container():
+                col1, col2, col3, col4, col5 = st.columns([1, 2, 1, 1, 1])
+                
+                with col1:
+                    is_selected = collection_name in st.session_state.selected_collections
+                    if st.checkbox("", value=is_selected, key=f"check_{collection_name}"):
+                        if collection_name not in st.session_state.selected_collections:
+                            st.session_state.selected_collections.append(collection_name)
+                    else:
+                        if collection_name in st.session_state.selected_collections:
+                            st.session_state.selected_collections.remove(collection_name)
+                
+                with col2:
+                    st.markdown(f"**{collection_name}**")
+                    if info.get('error'):
+                        st.error(f"Error: {info['error']}")
+                    else:
+                        st.caption(f"{info['field_count']} fields")
+                
+                with col3:
+                    st.write(f"{info['document_count']:,} docs")
+                
+                with col4:
+                    if info.get('has_nested_data'):
+                        st.markdown("🔗 **Nested**")
+                    else:
+                        st.markdown("📄 **Simple**")
+                
+                with col5:
+                    if st.button("ℹ️", key=f"info_{collection_name}"):
+                        st.session_state.show_info = collection_name
+    
+        # Show collection details if requested
+        if 'show_info' in st.session_state and st.session_state.show_info:
+            collection_name = st.session_state.show_info
+            info = next((c for c in st.session_state.collection_info if c['name'] == collection_name), None)
         
         if info:
             st.markdown(f"### 📋 Details: {collection_name}")
@@ -281,46 +359,32 @@ def main():
                 del st.session_state.show_info
                 st.experimental_rerun()
     
-    # Processing section
-    if st.session_state.selected_collections:
+        # Show selected collections info
+        if st.session_state.selected_collections:
+            st.markdown("---")
+            st.markdown(f"### 📋 Selected Collections ({len(st.session_state.selected_collections)})")
+            
+            # Store selected collections in session state for other pages
+            st.session_state.collections_to_process = st.session_state.selected_collections
+            
+            for i, collection in enumerate(st.session_state.selected_collections, 1):
+                st.write(f"{i}. {collection}")
+            
+            st.info("Click the '🔄 Process' button above to start processing these collections.")
+        
+        # Navigation to other pages
         st.markdown("---")
-        st.markdown(f"### 🚀 Processing {len(st.session_state.selected_collections)} Selected Collections")
-        
-        st.write("**Selected Collections:**")
-        for i, collection in enumerate(st.session_state.selected_collections, 1):
-            st.write(f"{i}. {collection}")
-        
-        # Store selected collections in session state for other pages
-        st.session_state.collections_to_process = st.session_state.selected_collections
+        st.markdown("### 📄 Navigation")
         
         col1, col2 = st.columns(2)
         
         with col1:
-            if st.button("🔄 Parse Collections", type="primary"):
-                with st.spinner("Processing collections..."):
-                    success = run_stage1_parser(st.session_state.selected_collections)
-                    if success:
-                        st.session_state.processing_complete = True
-                        st.success("✅ Collections processed successfully! Check the 'Processing Logs' page to monitor progress.")
-                        st.experimental_rerun()
+            if st.button("📋 View Processing Logs"):
+                st.markdown("Navigate to the Processing Logs page using the sidebar menu.")
         
         with col2:
-            if st.button("📊 View Existing Parquet Files"):
+            if st.button("📊 Parquet File Explorer"):
                 st.markdown("Navigate to the Parquet Explorer page using the sidebar menu.")
-    
-    # Navigation to other pages
-    st.markdown("---")
-    st.markdown("### 📄 Navigation")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        if st.button("📋 View Processing Logs"):
-            st.markdown("Navigate to the Processing Logs page using the sidebar menu.")
-    
-    with col2:
-        if st.button("📊 Parquet File Explorer"):
-            st.markdown("Navigate to the Parquet Explorer page using the sidebar menu.")
 
 
 if __name__ == "__main__":

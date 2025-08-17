@@ -69,16 +69,14 @@ def format_log_line(line):
     # Add CSS classes based on log level
     if "INFO" in line:
         return f'<div class="log-line log-info">{line}</div>'
-    elif "SUCCESS" in line or "✅" in line:
+    elif "SUCCESS" in line or "Completed" in line:
         return f'<div class="log-line log-success">{line}</div>'
-    elif "WARNING" in line or "⚠️" in line:
+    elif "WARNING" in line:
         return f'<div class="log-line log-warning">{line}</div>'
-    elif "ERROR" in line or "❌" in line:
+    elif "ERROR" in line:
         return f'<div class="log-line log-error">{line}</div>'
-    elif "🚀" in line:
+    elif "Starting" in line:
         return f'<div class="log-line log-start">{line}</div>'
-    elif "✅" in line and "Completed" in line:
-        return f'<div class="log-line log-complete">{line}</div>'
     else:
         return f'<div class="log-line">{line}</div>'
 
@@ -160,9 +158,9 @@ def main():
         st.markdown("### 📊 Log Statistics")
         
         info_count = sum(1 for line in log_lines if "INFO" in line)
-        success_count = sum(1 for line in log_lines if "SUCCESS" in line or "✅" in line)
-        warning_count = sum(1 for line in log_lines if "WARNING" in line or "⚠️" in line)
-        error_count = sum(1 for line in log_lines if "ERROR" in line or "❌" in line)
+        success_count = sum(1 for line in log_lines if "SUCCESS" in line or "Completed" in line)
+        warning_count = sum(1 for line in log_lines if "WARNING" in line)
+        error_count = sum(1 for line in log_lines if "ERROR" in line)
         
         col1, col2, col3, col4 = st.columns(4)
         with col1:

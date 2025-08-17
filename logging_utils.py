@@ -42,14 +42,14 @@ def get_stage1_logger() -> logging.Logger:
 def log_stage_start(logger: logging.Logger, stage: str, collection_name: str = None):
     """Log the start of a processing stage."""
     if collection_name:
-        logger.info(f"🚀 Starting {stage} for collection: {collection_name}")
+        logger.info(f"Starting {stage} for collection: {collection_name}")
     else:
-        logger.info(f"🚀 Starting {stage}")
+        logger.info(f"Starting {stage}")
 
 def log_stage_complete(logger: logging.Logger, stage: str, collection_name: str = None,
                       records_processed: int = None, file_size_mb: float = None):
     """Log the completion of a processing stage."""
-    message = f"✅ Completed {stage}"
+    message = f"Completed {stage}"
     if collection_name:
         message += f" for collection: {collection_name}"
     if records_processed is not None:
@@ -60,7 +60,7 @@ def log_stage_complete(logger: logging.Logger, stage: str, collection_name: str 
 
 def log_error(logger: logging.Logger, stage: str, error: Exception, collection_name: str = None):
     """Log an error during processing."""
-    message = f"❌ Error in {stage}"
+    message = f"Error in {stage}"
     if collection_name:
         message += f" for collection: {collection_name}"
     message += f": {str(error)}"

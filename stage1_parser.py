@@ -323,7 +323,7 @@ def main():
         
         # Get user choice
         print("\n" + "="*60)
-        print("🔄 UNIFIED STAGE1 PARSER")
+        print("UNIFIED STAGE1 PARSER")
         print("="*60)
         print("1. Process all collections")
         print("2. Process specific collections")
@@ -354,7 +354,7 @@ def main():
         
         # Print summary
         print("\n" + "="*60)
-        print("📊 PROCESSING SUMMARY")
+        print("PROCESSING SUMMARY")
         print("="*60)
         
         successful = sum(1 for success in results.values() if success)
