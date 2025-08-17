@@ -1,0 +1,20 @@
+{
+    "mongodb": {
+        "uri": "mongodb+srv://kainam:g1YLA2hnkuVZ4eEN@cluster0.r9o3g.mongodb.net/?retryWrites=true&w=majority",
+        "databases": {
+            "production": "nippy_ms_db",
+            "feedback": "heroku_hhp2777d",
+            "development": "nippy_ms_db_dev",
+            "qa": "nippy_ms_db_qa"
+        }
+    },
+    "export": {
+        "base_directory": "parquet_exports",
+        "stage1_directory": "stage1"
+    },
+    "logging": {
+        "level": "INFO",
+        "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        "stage1_log_file": "logs/stage1.log"
+    }
+}
