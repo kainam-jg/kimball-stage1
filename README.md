@@ -70,18 +70,33 @@ This pipeline provides an intelligent, unified approach to transform MongoDB doc
 
 ## Installation
 
+1. Clone the repository:
+```bash
+git clone https://github.com/kainam-jg/kimball-stage1.git
+cd kimball-stage1
+```
+
+2. Install dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
+3. Configure the application:
+   - Copy the sample configuration: `cp config.sample.json config.json`
+   - Update `config.json` with your MongoDB connection details:
+     - Replace `username:password` with your MongoDB credentials
+     - Replace `cluster.mongodb.net` with your cluster URL
+     - Replace `your_database_name` with your actual database name
+   - Ensure your MongoDB instance is accessible
+
 ## Configuration
 
-The pipeline uses `config.json` for configuration:
+The pipeline uses `config.json` for configuration. A sample file `config.sample.json` is provided:
 
 ```json
 {
     "mongodb": {
-        "uri": "your_mongodb_connection_string",
+        "uri": "mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority",
         "databases": {
             "production": "your_database_name"
         }
@@ -92,10 +107,13 @@ The pipeline uses `config.json` for configuration:
     },
     "logging": {
         "level": "INFO",
+        "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         "stage1_log_file": "logs/stage1.log"
     }
 }
 ```
+
+**Note**: The `config.json` file is excluded from version control for security reasons. Always use the sample file as a template.
 
 ## Usage
 
@@ -134,11 +152,14 @@ project/
 ├── stage1_parser.py          # Unified Stage1: Smart MongoDB to Parquet
 ├── verify_stage1.py          # Verification tool for Stage1 files
 ├── status.py                 # Status checker
-├── streamlit_app.py          # Data explorer
+├── streamlit_app.py          # Main Streamlit app (Home page)
 ├── config.py                 # Configuration loader
-├── config.json              # Configuration settings
+├── config.sample.json        # Sample configuration template
 ├── logging_utils.py         # Logging utilities
 ├── requirements.txt         # Dependencies
+├── pages/                   # Streamlit multipage app
+│   ├── 02_Processing_Logs.py    # Processing logs page
+│   └── 03_Parquet_Explorer.py   # Parquet file explorer
 ├── parquet_exports/         # Output directory
 │   └── stage1/             # Stage1 processed files
 ├── logs/                   # Processing logs
@@ -199,12 +220,32 @@ project/
 
 ## Data Explorer
 
-The included Streamlit application provides:
+The included Streamlit application provides a comprehensive multipage interface:
+
+### 🏠 Home Page - Collection Selection
+- **MongoDB Connection**: Browse all available collections in your database
+- **Smart Analysis**: View collection details including document count, field count, and nested data detection
+- **Search & Filter**: Find collections by name or filter by characteristics (nested data, size, etc.)
+- **Batch Selection**: Select individual collections, groups, or all collections for processing
+- **Processing Control**: Initiate Stage1 processing with selected collections
+
+### 📋 Processing Logs Page
+- **Real-time Monitoring**: Watch processing progress with auto-refresh capabilities
+- **Log Statistics**: View counts of info, success, warning, and error messages
+- **Completion Detection**: Automatic notification when processing is complete
+- **Navigation**: Easy access to move between processing and exploration
+
+### 📊 Parquet Explorer Page
 - **File Browser**: Browse and select specific collection files
 - **Data Preview**: Interactive data exploration with filtering and search
 - **Column Analysis**: Statistical analysis of data types and distributions
-- **Visual Analytics**: Charts and graphs for data insights
-- **Smart Display**: Shows processing type (simple vs. complex)
+- **Search & Filter**: Advanced filtering and search capabilities
+- **Data Summary**: Comprehensive data quality and statistics information
+
+### 🚀 Launch the Application
+```bash
+streamlit run streamlit_app.py
+```
 
 ## Next Steps
 

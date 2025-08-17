@@ -1,11 +1,8 @@
 {
     "mongodb": {
-        "uri": "mongodb+srv://kainam:g1YLA2hnkuVZ4eEN@cluster0.r9o3g.mongodb.net/?retryWrites=true&w=majority",
+        "uri": "mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority",
         "databases": {
-            "production": "nippy_ms_db",
-            "feedback": "heroku_hhp2777d",
-            "development": "nippy_ms_db_dev",
-            "qa": "nippy_ms_db_qa"
+            "production": "your_database_name"
         }
     },
     "export": {
