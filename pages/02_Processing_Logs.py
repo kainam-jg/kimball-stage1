@@ -89,7 +89,7 @@ def main():
     
     # Navigation
     if st.button("← Back to Home"):
-        st.switch_page("streamlit_app.py")
+        st.markdown("Navigate to the Home page using the sidebar menu.")
     
     # Check if collections are being processed
     if 'collections_to_process' in st.session_state:
@@ -181,10 +181,10 @@ def main():
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("📊 View Parquet Files", type="primary"):
-                    st.switch_page("pages/03_Parquet_Explorer.py")
+                    st.markdown("Navigate to the Parquet Explorer page using the sidebar menu.")
             with col2:
                 if st.button("🔄 Process More Collections"):
-                    st.switch_page("streamlit_app.py")
+                    st.markdown("Navigate to the Home page using the sidebar menu.")
     
     else:
         st.info("📋 Log file is empty. Start processing collections to see logs here.")

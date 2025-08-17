@@ -235,7 +235,7 @@ def main():
     
     # Navigation
     if st.button("← Back to Home"):
-        st.switch_page("streamlit_app.py")
+        st.markdown("Navigate to the Home page using the sidebar menu.")
     
     # Get available files
     parquet_files = get_parquet_files()
@@ -247,10 +247,10 @@ def main():
         col1, col2 = st.columns(2)
         with col1:
             if st.button("🔄 Process Collections"):
-                st.switch_page("streamlit_app.py")
+                st.markdown("Navigate to the Home page using the sidebar menu.")
         with col2:
             if st.button("📋 View Processing Logs"):
-                st.switch_page("pages/02_Processing_Logs.py")
+                st.markdown("Navigate to the Processing Logs page using the sidebar menu.")
         return
     
     # File selection
@@ -317,11 +317,11 @@ def main():
     
     with col1:
         if st.button("🔄 Process More Collections"):
-            st.switch_page("streamlit_app.py")
+            st.markdown("Navigate to the Home page using the sidebar menu.")
     
     with col2:
         if st.button("📋 View Processing Logs"):
-            st.switch_page("pages/02_Processing_Logs.py")
+            st.markdown("Navigate to the Processing Logs page using the sidebar menu.")
 
 
 if __name__ == "__main__":

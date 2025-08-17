@@ -306,7 +306,7 @@ def main():
         
         with col2:
             if st.button("📊 View Existing Parquet Files"):
-                st.switch_page("pages/03_Parquet_Explorer.py")
+                st.markdown("Navigate to the Parquet Explorer page using the sidebar menu.")
     
     # Navigation to other pages
     st.markdown("---")
@@ -316,11 +316,11 @@ def main():
     
     with col1:
         if st.button("📋 View Processing Logs"):
-            st.switch_page("pages/02_Processing_Logs.py")
+            st.markdown("Navigate to the Processing Logs page using the sidebar menu.")
     
     with col2:
         if st.button("📊 Parquet File Explorer"):
-            st.switch_page("pages/03_Parquet_Explorer.py")
+            st.markdown("Navigate to the Parquet Explorer page using the sidebar menu.")
 
 
 if __name__ == "__main__":
