@@ -219,8 +219,7 @@ class UnifiedStage1Parser:
             
             # Create DataFrame and export
             df = pd.DataFrame(documents)
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"{collection_name}_stage1_{timestamp}.parquet"
+            filename = f"{collection_name}.parquet"
             filepath = os.path.join(self.export_path, filename)
             
             df.to_parquet(filepath, index=False)
@@ -253,8 +252,7 @@ class UnifiedStage1Parser:
             denormalized_df = self.denormalizer.denormalize_dataframe(flattened_df)
             
             # Step 3: Export final denormalized data
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"{collection_name}_stage1_{timestamp}.parquet"
+            filename = f"{collection_name}.parquet"
             filepath = os.path.join(self.export_path, filename)
             
             denormalized_df.to_parquet(filepath, index=False)

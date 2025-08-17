@@ -87,7 +87,7 @@ def display_file_overview(df, filename):
             timestamp = timestamp_part
     else:
         collection_name = os.path.basename(filename).replace('.parquet', '')
-        timestamp = "Unknown"
+        timestamp = "Simple naming"
     
     st.markdown(f"""
     <div class="file-info">
@@ -271,7 +271,7 @@ def main():
                 timestamp = timestamp_part
             display_name = f"{collection_name} ({timestamp})"
         else:
-            display_name = filename.replace('.parquet', '')
+            display_name = filename.replace('.parquet', '') + " (Simple naming)"
         
         file_options[display_name] = file_path
     

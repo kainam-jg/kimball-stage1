@@ -108,7 +108,9 @@ def main():
         filename = os.path.basename(filepath)
         if '_stage1_' in filename:
             collection_name = filename.split('_stage1_')[0]
-            processed_collections.add(collection_name)
+        else:
+            collection_name = filename.replace('.parquet', '')
+        processed_collections.add(collection_name)
     
     missing_collections = set(collections) - processed_collections
     

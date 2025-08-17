@@ -10,7 +10,7 @@ from pymongo import MongoClient
 
 # Page configuration
 st.set_page_config(
-    page_title="Kimball Stage1 - MongoDB to Parquet Pipeline",
+    page_title="Find Collections",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded"

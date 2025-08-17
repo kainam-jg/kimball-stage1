@@ -9,6 +9,8 @@ This pipeline provides an intelligent, unified approach to transform MongoDB doc
 - **Smart Detection**: Automatically detects whether collections have nested data structures
 - **Unified Processing**: Handles both simple and complex collections in a single stage
 - **Optimized Output**: Creates normalized Parquet files with all data types as strings
+- **Simple Naming**: Clean, collection-based file naming without timestamps
+- **SQL Querying**: Advanced DuckDB integration for direct SQL queries on Parquet files
 
 ## ✅ Processing Status: COMPLETED
 
@@ -18,6 +20,7 @@ This pipeline provides an intelligent, unified approach to transform MongoDB doc
 - **Smart Processing**: Collections with nested data are flattened and denormalized
 - **Simple Collections**: Collections without nested data are exported directly
 - **File Structure**: Organized in `parquet_exports/stage1/`
+- **Clean Naming**: Simple collection names (e.g., `carts.parquet`, `profiles.parquet`)
 
 ## Features
 
@@ -28,6 +31,7 @@ This pipeline provides an intelligent, unified approach to transform MongoDB doc
 - **String Conversion**: Converts all data types to strings for consistency
 - **Batch Processing**: Handles large collections efficiently with memory-optimized processing
 - **Comprehensive Logging**: Detailed logging with file and console output
+- **Simple File Naming**: Clean collection-based names without timestamps
 
 ### 📊 Unified Processing Pipeline
 
@@ -37,7 +41,16 @@ This pipeline provides an intelligent, unified approach to transform MongoDB doc
 - **Simple Collections**: Direct export with string conversion
 - **Complex Collections**: Flatten → Denormalize → Export
 - **Output**: String-only Parquet files ready for analytics
+- **File Naming**: `{collection_name}.parquet` (simple and clean)
 - **Example**: `cartFields_0_title` → `title` (denormalized)
+
+### 🦆 DuckDB SQL Querying
+- **Direct SQL Queries**: Write SQL directly on Parquet files
+- **Simple Table Names**: Use collection names as table names (e.g., `SELECT * FROM carts`)
+- **Visual Join Builder**: Build complex joins between multiple files
+- **Schema Discovery**: Automatic schema detection and display
+- **Query Results**: Download results as CSV or Parquet
+- **Sample Queries**: Built-in examples for common operations
 
 ## Architecture
 
@@ -62,6 +75,7 @@ This pipeline provides an intelligent, unified approach to transform MongoDB doc
 - Orchestrates the entire processing pipeline
 - Makes intelligent decisions based on collection analysis
 - Handles both simple and complex collections seamlessly
+- Uses simple file naming: `{collection_name}.parquet`
 
 ### Configuration Management
 - **JSON Configuration**: Centralized `config.json` for all settings
@@ -130,7 +144,7 @@ The unified Stage1 parser will:
 4. **Intelligent Processing**:
    - **Simple Collections**: Export directly with string conversion
    - **Complex Collections**: Flatten → Denormalize → Export
-5. Export to `{collection_name}_stage1_{timestamp}.parquet`
+5. Export to `{collection_name}.parquet` (simple naming)
 
 ### Status and Verification
 
@@ -142,35 +156,36 @@ python status.py
 python verify_stage1.py
 
 # Explore data with Streamlit
-streamlit run streamlit_app.py
+streamlit run "01_Find_Collections.py"
 ```
 
 ## File Structure
 
 ```
 project/
-├── stage1_parser.py          # Unified Stage1: Smart MongoDB to Parquet
-├── verify_stage1.py          # Verification tool for Stage1 files
-├── status.py                 # Status checker
-├── streamlit_app.py          # Main Streamlit app (Home page)
-├── config.py                 # Configuration loader
-├── config.sample.json        # Sample configuration template
-├── logging_utils.py         # Logging utilities
-├── requirements.txt         # Dependencies
-├── pages/                   # Streamlit multipage app
-│   ├── 02_Processing_Logs.py    # Processing logs page
-│   └── 03_Parquet_Explorer.py   # Parquet file explorer
-├── parquet_exports/         # Output directory
-│   └── stage1/             # Stage1 processed files
-├── logs/                   # Processing logs
-│   └── stage1.log         # Stage1 processing logs
-└── README.md              # This file
+├── 01_Find_Collections.py      # Main Streamlit app (Home page)
+├── stage1_parser.py            # Unified Stage1: Smart MongoDB to Parquet
+├── verify_stage1.py            # Verification tool for Stage1 files
+├── status.py                   # Status checker
+├── config.py                   # Configuration loader
+├── config.sample.json          # Sample configuration template
+├── logging_utils.py           # Logging utilities
+├── requirements.txt           # Dependencies
+├── pages/                     # Streamlit multipage app
+│   ├── 02_Processing_Logs.py      # Processing logs page
+│   ├── 03_Parquet_Explorer.py     # Parquet file explorer
+│   └── 04_DuckDB_Query.py         # DuckDB SQL query interface
+├── parquet_exports/           # Output directory
+│   └── stage1/               # Stage1 processed files
+├── logs/                     # Processing logs
+│   └── stage1.log           # Stage1 processing logs
+└── README.md                # This file
 ```
 
 ## Processing Results
 
 ### Stage1 Output
-- **Format**: `{collection_name}_stage1_{timestamp}.parquet`
+- **Format**: `{collection_name}.parquet` (simple naming)
 - **Data Type**: All strings
 - **Structure**: 
   - **Simple Collections**: Direct export with string conversion
@@ -197,6 +212,7 @@ project/
 - **Reliable**: Comprehensive error handling and validation
 - **Logging**: Detailed processing logs for monitoring and debugging
 - **Smart**: Only processes complex collections when necessary
+- **Simple**: Clean file naming without complex timestamps
 
 ## Use Cases
 
@@ -204,8 +220,9 @@ project/
 - **ETL Pipelines**: Prepare data for business intelligence tools
 - **Machine Learning**: Create clean datasets for ML training
 - **Data Migration**: Convert MongoDB data to other formats
-- **Analytics**: Enable SQL-like queries on MongoDB data
+- **Analytics**: Enable SQL-like queries on MongoDB data via DuckDB
 - **Data Exploration**: Interactive exploration via Streamlit interface
+- **SQL Querying**: Direct SQL queries on Parquet files without data loading
 
 ## Benefits
 
@@ -217,6 +234,8 @@ project/
 - **Organized**: Clear separation between simple and complex processing
 - **Monitored**: Comprehensive logging and status tracking
 - **Smart**: Automatically detects and handles different collection types
+- **Simple**: Clean file naming without complex timestamps
+- **Queryable**: Direct SQL access via DuckDB integration
 
 ## Data Explorer
 
@@ -242,10 +261,51 @@ The included Streamlit application provides a comprehensive multipage interface:
 - **Search & Filter**: Advanced filtering and search capabilities
 - **Data Summary**: Comprehensive data quality and statistics information
 
+### 🦆 DuckDB Query Page
+- **SQL Query Interface**: Write and execute SQL queries directly on Parquet files
+- **Simple Table Names**: Use collection names as table names (e.g., `SELECT * FROM carts`)
+- **Visual Join Builder**: Build complex joins between multiple files with a graphical interface
+- **Schema Discovery**: Automatic schema detection and display for all files
+- **Query Results**: View results in interactive tables with download options
+- **Sample Queries**: Built-in examples for common operations
+- **File Selection**: Multi-select interface for choosing files to query
+
 ### 🚀 Launch the Application
 ```bash
-streamlit run streamlit_app.py
+streamlit run "01_Find_Collections.py"
 ```
+
+## SQL Querying with DuckDB
+
+The DuckDB Query page enables direct SQL queries on your Parquet files:
+
+### Basic Queries
+```sql
+-- View all data from a collection
+SELECT * FROM carts LIMIT 10;
+
+-- Count records in each collection
+SELECT 'carts' as file_name, COUNT(*) as record_count FROM carts
+UNION ALL
+SELECT 'profiles' as file_name, COUNT(*) as record_count FROM profiles;
+
+-- Join collections (if they have common columns)
+SELECT c.*, p.* 
+FROM carts c 
+INNER JOIN profiles p ON c.user_id = p.id;
+
+-- Aggregation examples
+SELECT column_name, COUNT(*) as count
+FROM carts 
+GROUP BY column_name;
+```
+
+### Features
+- **Simple Table Names**: Use collection names directly (no complex filenames)
+- **Visual Join Builder**: Build joins graphically without writing SQL
+- **Schema Discovery**: Automatic column detection and display
+- **Query Results**: Interactive tables with CSV/Parquet download
+- **Error Handling**: Clear error messages for debugging
 
 ## Next Steps
 
@@ -261,4 +321,4 @@ For issues, questions, or contributions, please refer to the project documentati
 
 ---
 
-**Pipeline Status**: ✅ **COMPLETED** - All 73 collections successfully processed through unified Stage1.
+**Pipeline Status**: ✅ **COMPLETED** - All 73 collections successfully processed through unified Stage1 with simple naming and DuckDB querying capabilities.
