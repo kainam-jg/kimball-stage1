@@ -201,16 +201,16 @@ def main():
     with col1:
         if st.button("✅ Select All"):
             st.session_state.selected_collections = [c['name'] for c in collection_info]
-            st.rerun()
+            st.experimental_rerun()
     
     with col2:
         if st.button("❌ Clear All"):
             st.session_state.selected_collections = []
-            st.rerun()
+            st.experimental_rerun()
     
     with col3:
         if st.button("🔄 Refresh"):
-            st.rerun()
+            st.experimental_rerun()
     
     # Initialize selected collections in session state
     if 'selected_collections' not in st.session_state:
@@ -279,7 +279,7 @@ def main():
             
             if st.button("Close Details"):
                 del st.session_state.show_info
-                st.rerun()
+                st.experimental_rerun()
     
     # Processing section
     if st.session_state.selected_collections:
@@ -302,7 +302,7 @@ def main():
                     if success:
                         st.session_state.processing_complete = True
                         st.success("✅ Collections processed successfully! Check the 'Processing Logs' page to monitor progress.")
-                        st.rerun()
+                        st.experimental_rerun()
         
         with col2:
             if st.button("📊 View Existing Parquet Files"):
