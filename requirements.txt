@@ -13,3 +13,6 @@ duckdb==1.2.1
 # Additional Data Analysis
 numpy==1.24.3
 python-dateutil==2.8.2
+
+# Process Management (for stop script)
+psutil==5.9.5

@@ -60,3 +60,6 @@ tmp/
 
 # Configuration files with sensitive data
 config.json
+
+# ERD metadata
+erd_metadata.json

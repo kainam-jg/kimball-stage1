@@ -174,7 +174,8 @@ project/
 ├── pages/                     # Streamlit multipage app
 │   ├── 02_Processing_Logs.py      # Processing logs page
 │   ├── 03_Parquet_Explorer.py     # Parquet file explorer
-│   └── 04_DuckDB_Query.py         # DuckDB SQL query interface
+│   ├── 04_ERD_Generator.py        # Entity Relationship Diagram generator
+│   └── 05_DuckDB_Query.py         # DuckDB SQL query interface
 ├── parquet_exports/           # Output directory
 │   └── stage1/               # Stage1 processed files
 ├── logs/                     # Processing logs
@@ -261,14 +262,22 @@ The included Streamlit application provides a comprehensive multipage interface:
 - **Search & Filter**: Advanced filtering and search capabilities
 - **Data Summary**: Comprehensive data quality and statistics information
 
+### 🔗 ERD Generator Page
+- **Entity Relationship Diagrams**: Automatically generate ERD diagrams from Parquet files
+- **Relationship Detection**: Detect foreign key relationships and common field relationships
+- **Mermaid Diagrams**: Generate Mermaid-compatible ERD diagrams
+- **Persistent Metadata**: Save analysis results for quick viewing without re-processing
+- **Table Analysis**: Detailed analysis of table structures and column characteristics
+- **Download Options**: Export diagrams and metadata for external use
+- **Progress Tracking**: Real-time progress updates during analysis
+
 ### 🦆 DuckDB Query Page
 - **SQL Query Interface**: Write and execute SQL queries directly on Parquet files
 - **Simple Table Names**: Use collection names as table names (e.g., `SELECT * FROM carts`)
-- **Visual Join Builder**: Build complex joins between multiple files with a graphical interface
+- **Automatic File Detection**: Automatically registers all available Parquet files as tables
 - **Schema Discovery**: Automatic schema detection and display for all files
 - **Query Results**: View results in interactive tables with download options
 - **Sample Queries**: Built-in examples for common operations
-- **File Selection**: Multi-select interface for choosing files to query
 
 ### 🚀 Launch the Application
 ```bash

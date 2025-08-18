@@ -306,7 +306,12 @@ def main():
                 
                 with col1:
                     is_selected = collection_name in st.session_state.selected_collections
-                    if st.checkbox("", value=is_selected, key=f"check_{collection_name}"):
+                    if st.checkbox(
+                        label="Select", 
+                        value=is_selected, 
+                        key=f"check_{collection_name}",
+                        label_visibility="collapsed"
+                    ):
                         if collection_name not in st.session_state.selected_collections:
                             st.session_state.selected_collections.append(collection_name)
                     else:
