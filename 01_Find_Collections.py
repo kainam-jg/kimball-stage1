@@ -6,6 +6,7 @@ import sys
 from datetime import datetime
 from config import MONGODB_URI, DATABASES
 from pymongo import MongoClient
+from auth_utils import check_authentication, show_user_info
 
 
 # Page configuration
@@ -15,6 +16,12 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Check authentication
+check_authentication()
+
+# Show user info in sidebar
+show_user_info()
 
 # Custom CSS
 st.markdown("""

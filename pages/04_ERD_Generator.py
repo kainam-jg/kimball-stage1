@@ -14,6 +14,7 @@ from typing import Dict, List, Tuple, Set
 from pathlib import Path
 import glob
 import time
+from auth_utils import check_authentication, show_user_info
 
 def get_stage1_path():
     """Get the Stage1 directory path."""
@@ -394,6 +395,12 @@ def save_erd_metadata(metadata):
 def main():
     """Main function for the ERD Generator page."""
     st.set_page_config(page_title="ERD Generator", page_icon="🔗")
+    
+    # Check authentication
+    check_authentication()
+    
+    # Show user info in sidebar
+    show_user_info()
     
     st.title("🔗 Entity Relationship Diagram Generator")
     st.markdown("Generate ERD diagrams from your selected Parquet files to understand table relationships.")

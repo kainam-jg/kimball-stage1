@@ -86,10 +86,11 @@ pip install -r requirements.txt
 ```
 
 3. Configure the application:
-   - Create a `config.json` file with your MongoDB connection details:
+   - Create a `config.json` file with your MongoDB connection details and authentication:
      - Replace `username:password` with your MongoDB credentials
      - Replace `cluster.mongodb.net` with your cluster URL
      - Replace `your_database_name` with your actual database name
+     - Add authentication credentials for the web interface
    - Ensure your MongoDB instance is accessible
 
 ## Configuration
@@ -112,6 +113,10 @@ The pipeline uses `config.json` for configuration. Create this file with the fol
         "level": "INFO",
         "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
         "stage1_log_file": "logs/stage1.log"
+    },
+    "authentication": {
+        "username": "your_web_username",
+        "password": "your_web_password"
     }
 }
 ```
@@ -152,12 +157,12 @@ streamlit run "01_Find_Collections.py"
 
 ```
 project/
+├── auth_utils.py            # Authentication utilities
 ├── 01_Find_Collections.py      # Main Streamlit app (Home page)
 ├── stage1_parser.py            # Unified Stage1: Smart MongoDB to Parquet
 ├── verify_stage1.py            # Verification tool for Stage1 files
 ├── status.py                   # Status checker
 ├── config.py                   # Configuration loader
-
 ├── logging_utils.py           # Logging utilities
 ├── requirements.txt           # Dependencies
 ├── pages/                     # Streamlit multipage app
@@ -274,6 +279,31 @@ The included Streamlit application provides a comprehensive multipage interface:
 ```bash
 streamlit run "01_Find_Collections.py"
 ```
+
+**Note**: The application includes built-in authentication. When you first access any page, you'll be prompted to log in using the credentials configured in your `config.json` file.
+
+## 🔐 Authentication
+
+The application includes a simple authentication system to secure access:
+
+### Features
+- **Login Page**: Secure entry point requiring username and password
+- **Session Management**: Maintains authentication state across pages
+- **User Information**: Displays current user in sidebar
+- **Logout Function**: Secure logout with session cleanup
+- **Configuration-Based**: Credentials stored in `config.json`
+
+### Security
+- **No Password Storage**: Passwords are not stored in session state
+- **Configuration File**: Credentials stored in excluded `config.json`
+- **Session-Based**: Authentication persists during browser session
+- **Automatic Redirect**: Unauthenticated users redirected to login
+
+### Usage
+1. **Start Application**: Run `streamlit run 01_Find_Collections.py`
+2. **Enter Credentials**: Use username/password from `config.json` when prompted
+3. **Access Features**: Navigate to any page after authentication
+4. **Logout**: Use logout button in sidebar when finished
 
 ## SQL Querying with DuckDB
 

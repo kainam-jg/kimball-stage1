@@ -3,6 +3,7 @@ import os
 import time
 from datetime import datetime
 from config import STAGE1_LOG_FILE
+from auth_utils import check_authentication, show_user_info
 
 
 # Page configuration
@@ -11,6 +12,12 @@ st.set_page_config(
     page_icon="📋",
     layout="wide"
 )
+
+# Check authentication
+check_authentication()
+
+# Show user info in sidebar
+show_user_info()
 
 # Custom CSS
 st.markdown("""
