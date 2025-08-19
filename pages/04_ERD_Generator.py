@@ -486,7 +486,7 @@ def main():
                                 st.session_state.selected_files.append(file_path)
                                 st.session_state.available_files.remove(file_path)
                             break
-                st.experimental_rerun()
+                st.rerun()
         
         st.markdown("&nbsp;")  # Add spacing
         
@@ -509,7 +509,7 @@ def main():
                                 st.session_state.selected_files.remove(file_path)
                                 st.session_state.available_files.append(file_path)
                                 break
-                    st.experimental_rerun()
+                    st.rerun()
         
         st.markdown("&nbsp;")  # Add spacing
         
@@ -517,7 +517,7 @@ def main():
         if st.button("🗑️ Clear All", help="Remove all files from analysis"):
             st.session_state.available_files.extend(st.session_state.selected_files)
             st.session_state.selected_files = []
-            st.experimental_rerun()
+            st.rerun()
     
     with col3:
         st.subheader("🎯 Selected Files")
@@ -569,7 +569,7 @@ def main():
                         st.session_state.erd_generator = generator
                         
                         # Auto-refresh to show results
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.error("❌ Failed to save ERD metadata")
                 else:

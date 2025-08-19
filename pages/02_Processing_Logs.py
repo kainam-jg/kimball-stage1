@@ -119,7 +119,7 @@ def main():
     
     with col3:
         if st.button("🔄 Manual Refresh"):
-            st.experimental_rerun()
+            st.rerun()
     
     # Log file display
     st.markdown("### 📄 Stage1 Processing Logs")
@@ -197,7 +197,7 @@ def main():
     # Auto-refresh functionality
     if auto_refresh:
         time.sleep(refresh_interval)
-        st.experimental_rerun()
+        st.rerun()
 
 
 if __name__ == "__main__":

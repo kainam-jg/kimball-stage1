@@ -227,7 +227,7 @@ def main():
         if clear_button:
             st.session_state.sql_query = ""
             st.session_state.query_result = None
-            st.experimental_rerun()
+            st.rerun()
     
     # Display results
     if 'query_result' in st.session_state and st.session_state.query_result is not None:

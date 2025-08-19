@@ -231,7 +231,7 @@ def main():
                 st.session_state.collection_info = collection_info
                 st.session_state.collections_loaded = True
                 st.success(f"✅ Discovered {len(collections)} collections!")
-                st.experimental_rerun()
+                st.rerun()
     else:
         # Collections are loaded, show the interface
         st.success(f"📊 {len(st.session_state.collections)} collections loaded")
@@ -242,7 +242,7 @@ def main():
             st.session_state.collections = []
             st.session_state.collection_info = []
             st.session_state.selected_collections = []
-            st.experimental_rerun()
+            st.rerun()
     
         # Search and filter
         col1, col2 = st.columns(2)
@@ -280,12 +280,12 @@ def main():
         with col1:
             if st.button("✅ Select All"):
                 st.session_state.selected_collections = [c['name'] for c in filtered_collection_info]
-                st.experimental_rerun()
+                st.rerun()
         
         with col2:
             if st.button("❌ Clear All"):
                 st.session_state.selected_collections = []
-                st.experimental_rerun()
+                st.rerun()
         
         with col3:
             if st.button("🔄 Process", type="primary"):
@@ -297,7 +297,7 @@ def main():
                             st.session_state.should_navigate_to_logs = True
                             st.success("✅ Collections processed successfully!")
                             st.info("🔄 Automatically navigating to Processing Logs page...")
-                            st.experimental_rerun()
+                            st.rerun()
                 else:
                     st.warning("Please select at least one collection to process.")
         
@@ -369,7 +369,7 @@ def main():
             
             if st.button("Close Details"):
                 del st.session_state.show_info
-                st.experimental_rerun()
+                st.rerun()
     
         # Show selected collections info
         if st.session_state.selected_collections:

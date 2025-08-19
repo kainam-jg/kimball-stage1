@@ -35,7 +35,7 @@ def check_authentication():
                         st.session_state.authenticated = True
                         st.session_state.username = username
                         st.success("✅ Authentication successful!")
-                        st.experimental_rerun()
+                        st.rerun()
                     else:
                         st.error("❌ Invalid username or password")
                 else:
@@ -54,7 +54,7 @@ def logout():
     if 'username' in st.session_state:
         del st.session_state.username
     st.success("✅ Logged out successfully")
-    st.experimental_rerun()
+    st.rerun()
 
 def show_user_info():
     """Display current user information in the sidebar."""
