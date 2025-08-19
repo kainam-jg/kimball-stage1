@@ -12,16 +12,6 @@ This pipeline provides an intelligent, unified approach to transform MongoDB doc
 - **Simple Naming**: Clean, collection-based file naming without timestamps
 - **SQL Querying**: Advanced DuckDB integration for direct SQL queries on Parquet files
 
-## ✅ Processing Status: COMPLETED
-
-**Successfully processed 73 MongoDB collections through unified Stage1:**
-
-- **Stage1**: 71 collections processed and exported
-- **Smart Processing**: Collections with nested data are flattened and denormalized
-- **Simple Collections**: Collections without nested data are exported directly
-- **File Structure**: Organized in `parquet_exports/stage1/`
-- **Clean Naming**: Simple collection names (e.g., `carts.parquet`, `profiles.parquet`)
-
 ## Features
 
 ### 🔄 Intelligent MongoDB Parser
@@ -42,11 +32,11 @@ This pipeline provides an intelligent, unified approach to transform MongoDB doc
 - **Complex Collections**: Flatten → Denormalize → Export
 - **Output**: String-only Parquet files ready for analytics
 - **File Naming**: `{collection_name}.parquet` (simple and clean)
-- **Example**: `cartFields_0_title` → `title` (denormalized)
+- **Example**: `parent_0_child` → `child` (denormalized)
 
 ### 🦆 DuckDB SQL Querying
 - **Direct SQL Queries**: Write SQL directly on Parquet files
-- **Simple Table Names**: Use collection names as table names (e.g., `SELECT * FROM carts`)
+- **Simple Table Names**: Use collection names as table names (e.g., `SELECT * FROM collection_name`)
 - **Visual Join Builder**: Build complex joins between multiple files
 - **Schema Discovery**: Automatic schema detection and display
 - **Query Results**: Download results as CSV or Parquet
@@ -86,8 +76,8 @@ This pipeline provides an intelligent, unified approach to transform MongoDB doc
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/kainam-jg/kimball-stage1.git
-cd kimball-stage1
+git clone <your-repository-url>
+cd <project-directory>
 ```
 
 2. Install dependencies:
@@ -96,8 +86,7 @@ pip install -r requirements.txt
 ```
 
 3. Configure the application:
-   - Copy the sample configuration: `cp config.sample.json config.json`
-   - Update `config.json` with your MongoDB connection details:
+   - Create a `config.json` file with your MongoDB connection details:
      - Replace `username:password` with your MongoDB credentials
      - Replace `cluster.mongodb.net` with your cluster URL
      - Replace `your_database_name` with your actual database name
@@ -105,7 +94,7 @@ pip install -r requirements.txt
 
 ## Configuration
 
-The pipeline uses `config.json` for configuration. A sample file `config.sample.json` is provided:
+The pipeline uses `config.json` for configuration. Create this file with the following structure:
 
 ```json
 {
@@ -127,7 +116,7 @@ The pipeline uses `config.json` for configuration. A sample file `config.sample.
 }
 ```
 
-**Note**: The `config.json` file is excluded from version control for security reasons. Always use the sample file as a template.
+**Note**: The `config.json` file is excluded from version control for security reasons.
 
 ## Usage
 
@@ -168,7 +157,7 @@ project/
 ├── verify_stage1.py            # Verification tool for Stage1 files
 ├── status.py                   # Status checker
 ├── config.py                   # Configuration loader
-├── config.sample.json          # Sample configuration template
+
 ├── logging_utils.py           # Logging utilities
 ├── requirements.txt           # Dependencies
 ├── pages/                     # Streamlit multipage app
@@ -178,6 +167,7 @@ project/
 │   └── 05_DuckDB_Query.py         # DuckDB SQL query interface
 ├── parquet_exports/           # Output directory
 │   └── stage1/               # Stage1 processed files
+├── metadata/                 # ERD metadata and analysis files
 ├── logs/                     # Processing logs
 │   └── stage1.log           # Stage1 processing logs
 └── README.md                # This file
@@ -191,19 +181,19 @@ project/
 - **Structure**: 
   - **Simple Collections**: Direct export with string conversion
   - **Complex Collections**: Flattened and denormalized
-- **Example**: `cartFields_0_title` → `title` (denormalized)
+- **Example**: `parent_0_child` → `child` (denormalized)
 
 ### Smart Processing Examples
 
 **Collections with Nested Data (Flattened & Denormalized):**
-- **`carts`**: 15,474 → 75,443 rows (4.9x expansion, 233 → 38 columns)
-- **`actioncarts`**: 34,700 → 139,757 rows (4.0x expansion, 164 → 45 columns)
-- **`countries`**: 21 → 416 rows (19.8x expansion, 106 → 12 columns)
+- Collections with nested objects or arrays are flattened and denormalized
+- Numbered columns (e.g., `parent_0_child`) are transposed into separate rows
+- Parent data is repeated for each child record
 
 **Collections without Nested Data (Direct Export):**
-- **`visits`**: 512,022 → 512,022 rows (1.0x, no expansion)
-- **`proxies`**: 242,202 → 242,202 rows (1.0x, no expansion)
-- **`ssos`**: 117,040 → 117,040 rows (1.0x, no expansion)
+- Collections with flat structures are exported directly
+- No data expansion or transformation
+- Maintains original record count
 
 ## Performance
 
@@ -270,10 +260,11 @@ The included Streamlit application provides a comprehensive multipage interface:
 - **Table Analysis**: Detailed analysis of table structures and column characteristics
 - **Download Options**: Export diagrams and metadata for external use
 - **Progress Tracking**: Real-time progress updates during analysis
+- **File Selection**: Choose specific Parquet files for ERD analysis to improve performance
 
 ### 🦆 DuckDB Query Page
 - **SQL Query Interface**: Write and execute SQL queries directly on Parquet files
-- **Simple Table Names**: Use collection names as table names (e.g., `SELECT * FROM carts`)
+- **Simple Table Names**: Use collection names as table names (e.g., `SELECT * FROM collection_name`)
 - **Automatic File Detection**: Automatically registers all available Parquet files as tables
 - **Schema Discovery**: Automatic schema detection and display for all files
 - **Query Results**: View results in interactive tables with download options
@@ -291,21 +282,21 @@ The DuckDB Query page enables direct SQL queries on your Parquet files:
 ### Basic Queries
 ```sql
 -- View all data from a collection
-SELECT * FROM carts LIMIT 10;
+SELECT * FROM collection_name LIMIT 10;
 
 -- Count records in each collection
-SELECT 'carts' as file_name, COUNT(*) as record_count FROM carts
+SELECT 'collection1' as file_name, COUNT(*) as record_count FROM collection1
 UNION ALL
-SELECT 'profiles' as file_name, COUNT(*) as record_count FROM profiles;
+SELECT 'collection2' as file_name, COUNT(*) as record_count FROM collection2;
 
 -- Join collections (if they have common columns)
 SELECT c.*, p.* 
-FROM carts c 
-INNER JOIN profiles p ON c.user_id = p.id;
+FROM collection1 c 
+INNER JOIN collection2 p ON c.user_id = p.id;
 
 -- Aggregation examples
 SELECT column_name, COUNT(*) as count
-FROM carts 
+FROM collection_name 
 GROUP BY column_name;
 ```
 
@@ -330,4 +321,4 @@ For issues, questions, or contributions, please refer to the project documentati
 
 ---
 
-**Pipeline Status**: ✅ **COMPLETED** - All 73 collections successfully processed through unified Stage1 with simple naming and DuckDB querying capabilities.
+**Pipeline Status**: ✅ **READY** - Generic MongoDB to Parquet pipeline with intelligent processing, simple naming, and DuckDB querying capabilities.

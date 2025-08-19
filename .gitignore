@@ -63,3 +63,6 @@ config.json
 
 # ERD metadata
 erd_metadata.json
+
+# Metadata directory
+metadata/

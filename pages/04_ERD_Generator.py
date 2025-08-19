@@ -19,6 +19,32 @@ def get_stage1_path():
     """Get the Stage1 directory path."""
     return "parquet_exports/stage1"
 
+def get_all_parquet_files():
+    """Get all Parquet files from both export base and stage1 directories."""
+    files = []
+    
+    # Get files from stage1 directory
+    stage1_path = get_stage1_path()
+    if os.path.exists(stage1_path):
+        pattern = os.path.join(stage1_path, "*.parquet")
+        files.extend(glob.glob(pattern))
+    
+    # Get files from export base directory (if different from stage1)
+    export_base = "parquet_exports"
+    if os.path.exists(export_base) and export_base != stage1_path:
+        pattern = os.path.join(export_base, "*.parquet")
+        files.extend(glob.glob(pattern))
+    
+    # Remove duplicates and sort
+    files = list(set(files))
+    files.sort()
+    
+    return files
+
+def get_file_display_name(file_path):
+    """Get a display name for the file (just the filename without path)."""
+    return os.path.basename(file_path)
+
 class ERDGenerator:
     """Generates Entity Relationship Diagrams from Parquet files."""
     
@@ -61,15 +87,22 @@ class ERDGenerator:
             col_name = row['column_name']
             col_type = row['column_type']
             
+            # Get column data for analysis
+            col_data = sample_data[col_name] if col_name in sample_data.columns else None
+            
+            # Calculate metrics with explicit type conversion
+            unique_values = int(len(col_data.dropna().unique())) if col_data is not None else 0
+            null_count = int(col_data.isna().sum()) if col_data is not None else 0
+            
             # Analyze column characteristics
             column_info = {
                 'name': col_name,
                 'type': col_type,
                 'is_primary_key': col_name == '_id',
-                'is_foreign_key': self._is_foreign_key_candidate(col_name, sample_data[col_name] if col_name in sample_data.columns else None),
+                'is_foreign_key': self._is_foreign_key_candidate(col_name, col_data),
                 'is_reference_field': self._is_reference_field(col_name),
-                'unique_values': len(sample_data[col_name].dropna().unique()) if col_name in sample_data.columns else 0,
-                'null_count': sample_data[col_name].isna().sum() if col_name in sample_data.columns else 0
+                'unique_values': unique_values,
+                'null_count': null_count
             }
             columns.append(column_info)
         
@@ -77,7 +110,7 @@ class ERDGenerator:
             'name': table_name,
             'file_path': file_path,
             'columns': columns,
-            'row_count': len(sample_data),
+            'row_count': int(len(sample_data)),
             'schema': schema.to_dict('records')
         }
     
@@ -172,7 +205,7 @@ class ERDGenerator:
                                     WHERE {table2_pk} = '{value}'
                                 """).fetchdf()
                                 
-                                if exists.iloc[0]['count'] > 0:
+                                if int(exists.iloc[0]['count']) > 0:
                                     relationships.append({
                                         'from_table': table1,
                                         'from_column': col['name'],
@@ -218,7 +251,7 @@ class ERDGenerator:
                     WHERE t1.{col1} IS NOT NULL AND t2.{col2} IS NOT NULL
                 """).fetchdf()
                 
-                if overlap.iloc[0]['overlap_count'] > 0:
+                if int(overlap.iloc[0]['overlap_count']) > 0:
                     relationships.append({
                         'from_table': table1,
                         'from_column': col1,
@@ -272,21 +305,21 @@ class ERDGenerator:
                 'foreign_key_relationships': len([r for r in self.relationships if r['relationship_type'] == 'foreign_key']),
                 'common_field_relationships': len([r for r in self.relationships if r['relationship_type'] == 'common_field'])
             },
-            'generated_at': time.strftime('%Y-%m-%d %H:%M:%S')
+            'generated_at': time.strftime('%Y-%m-%d %H:%M:%S'),
+            'selected_files': list(self.tables.keys())
         }
     
-    def analyze_all_tables(self, progress_bar, status_text):
-        """Analyze all Parquet files and detect relationships."""
-        parquet_files = self.get_parquet_files()
-        total_files = len(parquet_files)
+    def analyze_selected_tables(self, selected_files: List[str], progress_bar, status_text):
+        """Analyze selected Parquet files and detect relationships."""
+        total_files = len(selected_files)
         
         if total_files == 0:
-            st.error("No Parquet files found in the stage1 directory.")
+            st.error("No Parquet files selected for analysis.")
             return False
         
-        status_text.text(f"Found {total_files} Parquet files")
+        status_text.text(f"Analyzing {total_files} selected Parquet files")
         
-        for i, file_path in enumerate(parquet_files):
+        for i, file_path in enumerate(selected_files):
             table_name = os.path.basename(file_path).replace('.parquet', '')
             status_text.text(f"Analyzing {table_name}... ({i+1}/{total_files})")
             
@@ -308,7 +341,12 @@ class ERDGenerator:
 
 def load_erd_metadata():
     """Load ERD metadata from file if it exists."""
-    metadata_file = "erd_metadata.json"
+    # Ensure metadata directory exists
+    metadata_dir = "metadata"
+    if not os.path.exists(metadata_dir):
+        os.makedirs(metadata_dir)
+    
+    metadata_file = os.path.join(metadata_dir, "erd_metadata.json")
     if os.path.exists(metadata_file):
         try:
             with open(metadata_file, 'r') as f:
@@ -317,11 +355,37 @@ def load_erd_metadata():
             st.warning(f"Error loading ERD metadata: {e}")
     return None
 
+def convert_to_serializable(obj):
+    """Convert numpy/pandas types to JSON serializable types."""
+    import numpy as np
+    
+    if isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {key: convert_to_serializable(value) for key, value in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_to_serializable(item) for item in obj]
+    else:
+        return obj
+
 def save_erd_metadata(metadata):
     """Save ERD metadata to file."""
     try:
-        with open("erd_metadata.json", 'w') as f:
-            json.dump(metadata, f, indent=2)
+        # Ensure metadata directory exists
+        metadata_dir = "metadata"
+        if not os.path.exists(metadata_dir):
+            os.makedirs(metadata_dir)
+        
+        # Convert numpy/pandas types to JSON serializable types
+        serializable_metadata = convert_to_serializable(metadata)
+        
+        metadata_file = os.path.join(metadata_dir, "erd_metadata.json")
+        with open(metadata_file, 'w') as f:
+            json.dump(serializable_metadata, f, indent=2)
         return True
     except Exception as e:
         st.error(f"Error saving ERD metadata: {e}")
@@ -332,7 +396,7 @@ def main():
     st.set_page_config(page_title="ERD Generator", page_icon="🔗")
     
     st.title("🔗 Entity Relationship Diagram Generator")
-    st.markdown("Generate ERD diagrams from your Parquet files to understand table relationships.")
+    st.markdown("Generate ERD diagrams from your selected Parquet files to understand table relationships.")
     
     # Navigation
     back_button = st.button(
@@ -343,11 +407,17 @@ def main():
         st.markdown("Navigate to the Home page using the sidebar menu.")
     
     # Check if Parquet files exist
-    stage1_path = get_stage1_path()
-    if not os.path.exists(stage1_path):
-        st.error(f"Stage1 directory not found: {stage1_path}")
+    all_parquet_files = get_all_parquet_files()
+    if not all_parquet_files:
+        st.error("No Parquet files found in the export directories.")
         st.info("Please run the Stage1 parser first to generate Parquet files.")
         return
+    
+    # Initialize session state for file selection
+    if 'available_files' not in st.session_state:
+        st.session_state.available_files = all_parquet_files
+    if 'selected_files' not in st.session_state:
+        st.session_state.selected_files = []
     
     # Load existing metadata
     existing_metadata = load_erd_metadata()
@@ -367,17 +437,103 @@ def main():
         )
     else:
         st.sidebar.warning("⚠️ No ERD metadata found")
-        regenerate = True
+        regenerate = False
     
-    # Main content area
-    if regenerate or not existing_metadata:
-        st.header("🔍 ERD Analysis")
-        st.markdown("This will analyze all Parquet files to detect relationships between tables.")
+    # File Selection Interface
+    st.header("📁 Select Parquet Files for ERD Analysis")
+    st.markdown("Choose which Parquet files to include in the ERD analysis. This will make the process much faster by only analyzing selected files.")
+    
+    # Create three columns for the file selection interface
+    col1, col2, col3 = st.columns([2, 1, 2])
+    
+    with col1:
+        st.subheader("📂 Available Files")
+        st.markdown(f"**{len(st.session_state.available_files)} files found**")
+        
+        # Display available files
+        if st.session_state.available_files:
+            # Create a list of display names for the multiselect
+            available_display_names = [get_file_display_name(f) for f in st.session_state.available_files]
+            
+            selected_available = st.multiselect(
+                label="Select files to add:",
+                options=available_display_names,
+                help="Select files from the left box to move to the right"
+            )
+        else:
+            st.info("No files available")
+            selected_available = []
+    
+    with col2:
+        st.subheader("🔄 Actions")
+        st.markdown("&nbsp;")  # Add some spacing
+        
+        # Add button
+        if st.button("➡️ Add", help="Add selected files to analysis"):
+            if selected_available:
+                # Convert display names back to full paths
+                for display_name in selected_available:
+                    for file_path in st.session_state.available_files:
+                        if get_file_display_name(file_path) == display_name:
+                            if file_path not in st.session_state.selected_files:
+                                st.session_state.selected_files.append(file_path)
+                                st.session_state.available_files.remove(file_path)
+                            break
+                st.experimental_rerun()
+        
+        st.markdown("&nbsp;")  # Add spacing
+        
+        # Remove button
+        if st.button("⬅️ Remove", help="Remove selected files from analysis"):
+            if st.session_state.selected_files:
+                # Get selected files to remove
+                selected_display_names = [get_file_display_name(f) for f in st.session_state.selected_files]
+                selected_to_remove = st.multiselect(
+                    label="Select files to remove:",
+                    options=selected_display_names,
+                    help="Select files to remove from analysis"
+                )
+                
+                if selected_to_remove:
+                    # Convert display names back to full paths and remove
+                    for display_name in selected_to_remove:
+                        for file_path in st.session_state.selected_files[:]:  # Copy list to avoid modification during iteration
+                            if get_file_display_name(file_path) == display_name:
+                                st.session_state.selected_files.remove(file_path)
+                                st.session_state.available_files.append(file_path)
+                                break
+                    st.experimental_rerun()
+        
+        st.markdown("&nbsp;")  # Add spacing
+        
+        # Clear all button
+        if st.button("🗑️ Clear All", help="Remove all files from analysis"):
+            st.session_state.available_files.extend(st.session_state.selected_files)
+            st.session_state.selected_files = []
+            st.experimental_rerun()
+    
+    with col3:
+        st.subheader("🎯 Selected Files")
+        st.markdown(f"**{len(st.session_state.selected_files)} files selected**")
+        
+        # Display selected files
+        if st.session_state.selected_files:
+            selected_display_names = [get_file_display_name(f) for f in st.session_state.selected_files]
+            for display_name in selected_display_names:
+                st.markdown(f"• {display_name}")
+        else:
+            st.info("No files selected")
+    
+    # Generate ERD button
+    st.markdown("---")
+    
+    if st.session_state.selected_files:
+        st.success(f"✅ {len(st.session_state.selected_files)} files selected for ERD analysis")
         
         if st.button(
-            label="🚀 Start ERD Analysis",
+            label="🚀 Generate ERD for Selected Files",
             type="primary",
-            help="Begin the ERD analysis process"
+            help="Begin the ERD analysis process for selected files"
         ):
             # Initialize generator
             generator = ERDGenerator()
@@ -390,8 +546,8 @@ def main():
                 # Connect to database
                 generator.connect_db()
                 
-                # Analyze all tables
-                success = generator.analyze_all_tables(progress_bar, status_text)
+                # Analyze selected tables
+                success = generator.analyze_selected_tables(st.session_state.selected_files, progress_bar, status_text)
                 
                 if success:
                     # Generate metadata
@@ -416,6 +572,8 @@ def main():
                 st.error(f"❌ Error during ERD analysis: {e}")
             finally:
                 generator.close_db()
+    else:
+        st.warning("⚠️ Please select at least one Parquet file for ERD analysis")
     
     # Display results
     metadata_to_display = st.session_state.get('erd_metadata', existing_metadata)
@@ -551,8 +709,8 @@ def main():
         else:
             st.info("No relationships detected between tables.")
     
-    else:
-        st.info("No ERD data available. Click 'Start ERD Analysis' to begin.")
+    elif not st.session_state.selected_files:
+        st.info("No ERD data available. Select files and click 'Generate ERD' to begin.")
 
 if __name__ == "__main__":
     main()
